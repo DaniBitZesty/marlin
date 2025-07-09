@@ -4,7 +4,7 @@ import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
-import { Map, Satellite, Layers, AlertTriangle, Ship, MapPin } from "lucide-react";
+import { Map, Satellite, Layers, Ship } from "lucide-react";
 import { useState } from "react";
 
 const vessels = [

@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { DateRange } from "react-day-picker";
-import { AlertTriangle, Filter, Download, Eye, MapPin, Calendar as CalendarIcon, Search } from "lucide-react";
+import { AlertTriangle, Download, Eye, MapPin, Calendar as CalendarIcon, Search } from "lucide-react";
 import { useState } from "react";
 
 const eventsData = [

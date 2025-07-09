@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Satellite, Wifi, AlertTriangle, CheckCircle } from "lucide-react";
+import { Satellite, AlertTriangle, CheckCircle } from "lucide-react";
 
 const eventData = [
   { date: '2025-06-26', events: 22 },
