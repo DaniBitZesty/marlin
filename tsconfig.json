@@ -23,6 +23,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "composite": true,
+     "declaration": true,
     "jsx": "react-jsx"
   },
   "include": [
