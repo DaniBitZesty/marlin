@@ -1,30 +1,75 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
-import { Map, Satellite, Layers, Ship } from "lucide-react";
-import { useState } from "react";
-
-const vessels = [
-  { id: 1, name: "FV Ocean Explorer", x: 25, y: 30, status: "active", lastEvent: "2 mins ago" },
-  { id: 2, name: "FV Sea Guardian", x: 60, y: 45, status: "warning", lastEvent: "15 mins ago" },
-  { id: 3, name: "FV Atlantic Dawn", x: 40, y: 60, status: "active", lastEvent: "1 hour ago" },
-  { id: 4, name: "FV Marine Pride", x: 80, y: 25, status: "inactive", lastEvent: "2 hours ago" },
-];
-
-const bycatchEvents = [
-  { id: 1, x: 25, y: 32, species: "Harbour Porpoise", time: "2 mins ago", severity: "high" },
-  { id: 2, x: 40, y: 62, species: "Seal", time: "1 hour ago", severity: "high" },
-  { id: 3, x: 65, y: 40, species: "Seabird", time: "3 hours ago", severity: "medium" },
-];
+import { Map, Satellite, Layers, Ship, Play, Calendar, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { Icon } from 'leaflet';
+import vesselGreen from '../assets/icons/vessel-green.svg';
+import eventPin from '../assets/icons/event-red.svg';
+import type { Vessel } from '../mockData/mockVessel';
+import { mockVessels } from '../mockData/mockVessel';
+import type { Event } from '../mockData/mockEvents';
+import { mockEvents } from '../mockData/mockEvents';
+import 'leaflet/dist/leaflet.css';
 
 export function MapVisualization() {
-  const [selectedVessel, setSelectedVessel] = useState<number | null>(null);
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [showTracks, setShowTracks] = useState(true);
   const [showEvents, setShowEvents] = useState(true);
   const [mapLayer, setMapLayer] = useState("satellite");
+
+  // Fetch vessel data
+  // useEffect(() => {
+  //   const fetchVessels = async () => {
+  //     try {
+  //       const response = await fetch('https://my.api.mockaroo.com/vessels.json?key=ff25efd0');
+  //       if (!response.ok) {
+  //         throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
+
+  //       }
+  //       const data: Vessel[] = await response.json();
+  //       setVessels(data);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error('Error fetching vessels:', error);
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchVessels();
+  // }, []);
+
+  const vesselIcon = new Icon({
+    iconUrl: vesselGreen,
+    iconSize: [25, 41]
+  });
+
+  // // Fetch bycatch events
+  // useEffect(() => {
+  //   const fetchEvents = async () => {
+  //     try {
+  //       const response = await fetch('https://my.api.mockaroo.com/by_catch_events.json?key=ff25efd0');
+  //       if (!response.ok) {
+  //         throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
+  //       }
+  //       const data = await response.json();
+  //       setEvents(data);
+  //     } catch (error) {
+  //       console.error('Error fetching bycatch events:', error);
+  //     }
+  //   };
+  //   fetchEvents();
+  // }, []);
+
+  const eventIcon = new Icon({
+    iconUrl: eventPin,
+    iconSize: [20, 20],
+  });
 
   return (
     <Card className="col-span-full">
@@ -32,7 +77,7 @@ export function MapVisualization() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <Map className="w-5 h-5 text-ocean-blue" />
-            Vessel Tracking &amp; Events
+            Vessel Tracking & Events
           </CardTitle>
 
           {/* Map Controls */}
@@ -78,163 +123,137 @@ export function MapVisualization() {
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="relative">
-          {/* Mock Map Background */}
-          <div
-            className={`relative w-full h-96 rounded-lg border-2 border-dashed border-ocean-blue/20 overflow-hidden ${
-              mapLayer === 'satellite'
-                ? 'bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700'
-                : 'bg-gradient-to-br from-blue-300 via-blue-200 to-cyan-200'
-            }`}
-          >
-            {/* Grid overlay for map feel */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="grid grid-cols-10 grid-rows-8 h-full w-full">
-                {Array.from({ length: 80 }).map((_, i) => (
-                  <div key={i} className="border border-white/20"></div>
-                ))}
-              </div>
-            </div>
-
-            {/* Compass */}
-            <div className="absolute top-4 right-4 bg-card/90 backdrop-blur-sm rounded-lg p-2 border">
-              <div className="w-8 h-8 rounded-full border-2 border-ocean-blue flex items-center justify-center text-xs text-ocean-blue">
-                N
-              </div>
-            </div>
-
-            {/* Scale */}
-            <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg p-2 border">
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-12 h-1 bg-ocean-blue"></div>
-                <span>10 nm</span>
-              </div>
-            </div>
-
-            {/* Vessel Tracks */}
-            {showTracks && (
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                {vessels.map((vessel) => (
-                  <g key={`track-${vessel.id}`}>
-                    <path
-                      d={`M ${vessel.x - 10} ${vessel.y + 5} Q ${vessel.x} ${vessel.y - 10} ${vessel.x} ${vessel.y}`}
-                      stroke="rgba(59, 130, 246, 0.6)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray="5,5"
-                    />
-                  </g>
-                ))}
-              </svg>
-            )}
-
-            {/* Vessels */}
-            {vessels.map((vessel) => (
-              <Button
-                key={vessel.id}
-                variant="ghost"
-                className={`absolute p-1 h-8 w-8 transform -translate-x-1/2 -translate-y-1/2 hover:bg-card/90 ${
-                  selectedVessel === vessel.id ? 'bg-card/90 ring-2 ring-ocean-blue' : ''
-                }`}
-                style={{ left: `${vessel.x}%`, top: `${vessel.y}%` }}
-                onClick={() => setSelectedVessel(selectedVessel === vessel.id ? null : vessel.id)}
-              >
-                <Ship
-                  className={`w-5 h-5 ${
-                    vessel.status === 'active' ? 'text-sea-green' :
-                    vessel.status === 'warning' ? 'text-destructive' :
-                    'text-muted-foreground'
-                  }`}
-                />
-              </Button>
-            ))}
-
-            {/* Bycatch Events */}
-            {showEvents && bycatchEvents.map((event) => (
-              <div
-                key={event.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                style={{ left: `${event.x}%`, top: `${event.y}%` }}
-              >
-                <div className={`w-4 h-4 rounded-full border-2 border-white ${
-                  event.severity === 'high' ? 'bg-destructive' : 'bg-orange-500'
-                } animate-pulse`}></div>
-
-                {/* Event tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-card border rounded-lg p-2 shadow-lg min-w-max">
-                    <p className="text-xs font-medium">{event.species}</p>
-                    <p className="text-xs text-muted-foreground">{event.time}</p>
-                  </div>
+      {/* {loading ? (
+        <div className="flex items-center justify-center h-96">
+          <span className="text-muted-foreground">Loading vessels...</span>
+        </div>
+      ) : */}
+        <CardContent>
+          <div className="relative">
+            <div className="relative w-full h-96 rounded-lg border-2 border-ocean-blue/20 overflow-hidden">
+              {/* Grid overlay for map feel */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="grid grid-cols-10 grid-rows-8 h-full w-full">
+                  {Array.from({ length: 80 }).map((_, i) => (
+                    <div key={i} className="border border-white/20"></div>
+                  ))}
                 </div>
               </div>
-            ))}
 
-            {/* Vessel Info Panel */}
-            {selectedVessel && (
-              <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm border rounded-lg p-4 min-w-64">
-                {(() => {
-                  const vessel = vessels.find(v => v.id === selectedVessel);
-                  if (!vessel) return null;
-
-                  return (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{vessel.name}</h3>
-                        <Badge
-                          variant={vessel.status === 'active' ? 'default' : vessel.status === 'warning' ? 'destructive' : 'secondary'}
-                          className={vessel.status === 'active' ? 'bg-sea-green' : ''}
-                        >
-                          {vessel.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>Last update: {vessel.lastEvent}</p>
-                        <p>Position: 54.2°N, 2.1°W</p>
-                        <p>Speed: 4.2 knots</p>
-                        <p>Heading: 045°</p>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline" className="flex-1">
-                          Contact
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })()}
+              {/* Compass */}
+              <div className="absolute top-4 right-4 z-10">
+                <div className="w-8 h-8 rounded-full bg-card/90 border-2 border-gray-600 flex items-center justify-center text-xs text-grey-600">
+                  N
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Map Legend */}
-          <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <Ship className="w-4 h-4 text-sea-green" />
-              <span>Active Vessel</span>
+              {/* Map Container */}
+              <MapContainer center={[50.50, -20.65]} zoom={5} scrollWheelZoom={false}>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+
+                {/* Vessel markers */}
+                {mockVessels.map((vessel) => (
+                  <Marker key={vessel.id} position={[vessel.latitude, vessel.longitude]} icon={vesselIcon}>
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{vessel.name}</strong><br />
+                        Speed: {vessel.speed_knots} knots<br />
+                        Position: {vessel.latitude.toFixed(2)}°N, {vessel.longitude.toFixed(2)}°W<br />
+                        Heading: {vessel.heading}°<br />
+                        Status: <Badge variant={vessel.status === 'active' ? 'default' : vessel.status === 'warning' ? 'destructive' : 'secondary'}>{vessel.status}</Badge><br />
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+
+                {showEvents && mockEvents.map((event) => (
+                  <Marker
+                    key={event.id}
+                    position={[event.latitude, event.longitude]}
+                    icon={eventIcon}
+                  >
+                    <Popup>
+                      <div className="min-w-64 max-w-80">
+
+                        {/* Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <strong className="block text-sm">{event.bycatch_type}</strong>
+                            <p className="text-xs text-muted-foreground">Vessel: {event.vessel}</p>
+                          </div>
+                          <Badge
+                            variant={event.severity === 'high' ? 'destructive' : 'secondary'}
+                            className="capitalize"
+                          >
+                            {event.severity}
+                          </Badge>
+                        </div>
+
+                        {/* Video Thumbnail */}
+                        <div className="relative mb-3 group cursor-pointer">
+                          <img
+                            src={event.thumbnail}
+                            alt={`${event.bycatch_type} event thumbnail`}
+                            className="w-full h-24 object-cover rounded-sm"
+                          />
+                          <div className="absolute inset-0 bg-black/20 rounded-md flex items-center justify-center group-hover:bg-black/40 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                              <Play className="w-4 h-4 text-black ml-0.5" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Event Info */}
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3 h-3 text-muted-foreground" />
+                            <span>{event.date}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span>{event.time}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Ship className="w-3 h-3 text-muted-foreground" />
+                            <span>{event.vessel}</span>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-3 pt-2 border-t text-xs text-muted-foreground">
+                          <a
+                            href={event.thumbnail}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:underline"
+                          >
+                            Click thumbnail to view video
+                          </a>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
             </div>
-            <div className="flex items-center gap-2">
-              <Ship className="w-4 h-4 text-destructive" />
-              <span>Alert/Warning</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Ship className="w-4 h-4 text-muted-foreground" />
-              <span>Inactive</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-destructive border border-white"></div>
-              <span>High Priority Event</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-orange-500 border border-white"></div>
-              <span>Medium Priority Event</span>
+
+            {/* Map Legend */}
+            <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <img src={vesselGreen} alt="Vessel icon" className="w-4 h-4" />
+                <span>Vessel</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src={eventPin} alt="Vessel icon" className="w-4 h-4" />
+                <span>Bycatch Event</span>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
+      {/* } */}
     </Card>
   );
 }

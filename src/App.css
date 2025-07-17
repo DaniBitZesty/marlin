@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+.leaflet-container {
+  height: 28rem;
+  z-index: 0;
+}
+
+.leaflet-container a {
+  color: gray !important;
+}
