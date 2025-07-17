@@ -7,10 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local env files
 *.local
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Vite type output
+vite.config.d.ts
 
 # Editor directories and files
 .vscode/*
