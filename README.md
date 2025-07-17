@@ -17,7 +17,7 @@ A dashboard interface that enables users to interact with and visualise data col
 
 **Clone the repository:**
 ```bash
-git clone https://github.com/your-username/marlin-dashboard.git
+git clone https://github.com/danibitzesty/marlin-dashboard.git
 cd marlin-dashboard
 ```
 
