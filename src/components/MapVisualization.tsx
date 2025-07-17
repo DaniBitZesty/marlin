@@ -10,9 +10,7 @@ import { Icon } from 'leaflet';
 import vesselGreen from '../assets/icons/vessel-green.svg';
 import eventPin from '../assets/icons/event-red.svg';
 import type { Vessel } from '../mockData/mockVessel';
-import { mockVessels } from '../mockData/mockVessel';
 import type { Event } from '../mockData/mockEvents';
-import { mockEvents } from '../mockData/mockEvents';
 import 'leaflet/dist/leaflet.css';
 
 export function MapVisualization() {
@@ -25,46 +23,45 @@ export function MapVisualization() {
   const [mapLayer, setMapLayer] = useState("satellite");
 
   // Fetch vessel data
-  // useEffect(() => {
-  //   const fetchVessels = async () => {
-  //     try {
-  //       const response = await fetch('https://my.api.mockaroo.com/vessels.json?key=ff25efd0');
-  //       if (!response.ok) {
-  //         throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
-
-  //       }
-  //       const data: Vessel[] = await response.json();
-  //       setVessels(data);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error('Error fetching vessels:', error);
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchVessels();
-  // }, []);
+  useEffect(() => {
+    const fetchVessels = async () => {
+      try {
+        const response = await fetch('https://my.api.mockaroo.com/vessels.json?key=ff25efd0');
+        if (!response.ok) {
+          throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
+        }
+        const data: Vessel[] = await response.json();
+        setVessels(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching vessels:', error);
+        setLoading(false);
+      }
+    };
+    fetchVessels();
+  }, []);
 
   const vesselIcon = new Icon({
     iconUrl: vesselGreen,
     iconSize: [25, 41]
   });
 
-  // // Fetch bycatch events
-  // useEffect(() => {
-  //   const fetchEvents = async () => {
-  //     try {
-  //       const response = await fetch('https://my.api.mockaroo.com/by_catch_events.json?key=ff25efd0');
-  //       if (!response.ok) {
-  //         throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
-  //       }
-  //       const data = await response.json();
-  //       setEvents(data);
-  //     } catch (error) {
-  //       console.error('Error fetching bycatch events:', error);
-  //     }
-  //   };
-  //   fetchEvents();
-  // }, []);
+  // Fetch bycatch events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch('https://my.api.mockaroo.com/by_catch_events.json?key=ff25efd0');
+        if (!response.ok) {
+          throw new Error(`Network request failed with status ${response.status} (${response.statusText})`);
+        }
+        const data = await response.json();
+        setEvents(data);
+      } catch (error) {
+        console.error('Error fetching bycatch events:', error);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   const eventIcon = new Icon({
     iconUrl: eventPin,
@@ -123,22 +120,14 @@ export function MapVisualization() {
         </div>
       </CardHeader>
 
-      {/* {loading ? (
+      { loading ? (
         <div className="flex items-center justify-center h-96">
           <span className="text-muted-foreground">Loading vessels...</span>
         </div>
-      ) : */}
+      ) :
         <CardContent>
           <div className="relative">
             <div className="relative w-full h-96 rounded-lg border-2 border-ocean-blue/20 overflow-hidden">
-              {/* Grid overlay for map feel */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="grid grid-cols-10 grid-rows-8 h-full w-full">
-                  {Array.from({ length: 80 }).map((_, i) => (
-                    <div key={i} className="border border-white/20"></div>
-                  ))}
-                </div>
-              </div>
 
               {/* Compass */}
               <div className="absolute top-4 right-4 z-10">
@@ -155,7 +144,7 @@ export function MapVisualization() {
                 />
 
                 {/* Vessel markers */}
-                {mockVessels.map((vessel) => (
+                {vessels.map((vessel) => (
                   <Marker key={vessel.id} position={[vessel.latitude, vessel.longitude]} icon={vesselIcon}>
                     <Popup>
                       <div className="text-sm">
@@ -169,7 +158,8 @@ export function MapVisualization() {
                   </Marker>
                 ))}
 
-                {showEvents && mockEvents.map((event) => (
+                {/* Bycatch event markers */}
+                {showEvents && events.map((event) => (
                   <Marker
                     key={event.id}
                     position={[event.latitude, event.longitude]}
@@ -223,15 +213,8 @@ export function MapVisualization() {
                         </div>
 
                         {/* Footer */}
-                        <div className="mt-3 pt-2 border-t text-xs text-muted-foreground">
-                          <a
-                            href={event.thumbnail}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 hover:underline"
-                          >
-                            Click thumbnail to view video
-                          </a>
+                        <div className="mt-3 pt-2 border-t text-xs text-muted-foreground text-gray-500">
+                          Click thumbnail to view video
                         </div>
                       </div>
                     </Popup>
@@ -253,7 +236,7 @@ export function MapVisualization() {
             </div>
           </div>
         </CardContent>
-      {/* } */}
+      }
     </Card>
   );
 }
